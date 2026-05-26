@@ -13,6 +13,7 @@ const word = {
 export function Hero({ ready }: { ready: boolean }) {
   const ref = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const readyRef = useRef(false); // sync ref so onCanPlay can read latest value
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [muted, setMuted] = useState(true);
   const [ended, setEnded] = useState(false);
@@ -22,29 +23,28 @@ export function Hero({ ready }: { ready: boolean }) {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
-  // Start playing as soon as the loader finishes — no extra delay
+  // Keep readyRef in sync so the canPlay handler below can read it
+  useEffect(() => {
+    readyRef.current = ready;
+  }, [ready]);
+
+  // Path A: loader just finished → try to play immediately
   useEffect(() => {
     if (!ready) return;
     const video = videoRef.current;
     if (!video) return;
-
-    const attempt = () => {
-      video.play().catch(() => {
-        // Retry once after a short pause (some browsers need a tick)
-        setTimeout(() => video.play().catch(() => {}), 200);
-      });
-    };
-
-    // If video is already buffered enough, play immediately
-    if (video.readyState >= 3) {
-      attempt();
-    } else {
-      // Otherwise wait for it to be ready, then play
-      video.addEventListener("canplay", attempt, { once: true });
-    }
-
-    return () => video.removeEventListener("canplay", attempt);
+    video.play().catch(() => {
+      // Browser rejected (e.g. not buffered yet) — Path B (onCanPlay) will handle it
+    });
   }, [ready]);
+
+  // Path B (in JSX): onCanPlay fires → if ready, play right then
+  const handleCanPlay = () => {
+    setVideoLoaded(true);
+    if (readyRef.current) {
+      videoRef.current?.play().catch(() => {});
+    }
+  };
 
   const toggleMute = () => {
     if (videoRef.current) {
@@ -71,11 +71,11 @@ export function Hero({ ready }: { ready: boolean }) {
       <div className="absolute inset-0 z-0">
         <video
           ref={videoRef}
-          src="https://res.cloudinary.com/dxboyqwda/video/upload/v1779825370/mp__appemv.mp4"
+          src="/mp_.mp4"
           muted
           playsInline
           preload="auto"
-          onCanPlay={() => setVideoLoaded(true)}
+          onCanPlay={handleCanPlay}
           onEnded={() => setEnded(true)}
           className="h-full w-full object-cover"
           style={{ opacity: videoLoaded ? 1 : 0, transition: "opacity 1s ease" }}
