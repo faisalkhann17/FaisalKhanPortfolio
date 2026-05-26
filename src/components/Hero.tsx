@@ -51,7 +51,10 @@ export function Hero() {
           autoPlay
           muted
           playsInline
-          onCanPlay={() => setVideoLoaded(true)}
+          onCanPlay={() => {
+            setVideoLoaded(true);
+            videoRef.current?.play().catch(() => {});
+          }}
           onEnded={() => setEnded(true)}
           className="h-full w-full object-cover"
           style={{ opacity: videoLoaded ? 1 : 0, transition: "opacity 1s ease" }}
