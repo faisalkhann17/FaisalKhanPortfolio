@@ -22,15 +22,14 @@ export function Hero({ ready }: { ready: boolean }) {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
-  // Play video 1 second after loader is done
+  // When loader finishes, wait 1s then play
   useEffect(() => {
-    if (ready && videoLoaded) {
-      const timer = setTimeout(() => {
-        videoRef.current?.play().catch(() => {});
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [ready, videoLoaded]);
+    if (!ready) return;
+    const timer = setTimeout(() => {
+      videoRef.current?.play().catch(() => {});
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [ready]);
 
   const toggleMute = () => {
     if (videoRef.current) {
@@ -60,6 +59,7 @@ export function Hero({ ready }: { ready: boolean }) {
           src="https://res.cloudinary.com/dxboyqwda/video/upload/v1779825370/mp__appemv.mp4"
           muted
           playsInline
+          preload="auto"
           onCanPlay={() => setVideoLoaded(true)}
           onEnded={() => setEnded(true)}
           className="h-full w-full object-cover"
@@ -123,7 +123,6 @@ export function Hero({ ready }: { ready: boolean }) {
               transition={{ delay: 1.5, duration: 0.8 }}
               className="flex items-center gap-3"
             >
-              {/* Mute / Unmute */}
               <button
                 onClick={toggleMute}
                 className="flex items-center gap-2 rounded-full px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] backdrop-blur-md transition-all"
@@ -154,7 +153,6 @@ export function Hero({ ready }: { ready: boolean }) {
                 )}
               </button>
 
-              {/* Play Again — only after video ends */}
               {ended && (
                 <motion.button
                   initial={{ opacity: 0, x: -10 }}
