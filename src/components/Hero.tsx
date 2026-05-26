@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const word = {
@@ -10,7 +10,7 @@ const word = {
   }),
 } as const;
 
-export function Hero() {
+export function Hero({ ready }: { ready: boolean }) {
   const ref = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
@@ -21,6 +21,16 @@ export function Hero() {
   const y = useTransform(scrollYProgress, [0, 1], [0, 220]);
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  // Play video 1 second after loader is done
+  useEffect(() => {
+    if (ready && videoLoaded) {
+      const timer = setTimeout(() => {
+        videoRef.current?.play().catch(() => {});
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [ready, videoLoaded]);
 
   const toggleMute = () => {
     if (videoRef.current) {
@@ -48,13 +58,9 @@ export function Hero() {
         <video
           ref={videoRef}
           src="https://res.cloudinary.com/dxboyqwda/video/upload/v1779825370/mp__appemv.mp4"
-          autoPlay
           muted
           playsInline
-          onCanPlay={() => {
-            setVideoLoaded(true);
-            videoRef.current?.play().catch(() => {});
-          }}
+          onCanPlay={() => setVideoLoaded(true)}
           onEnded={() => setEnded(true)}
           className="h-full w-full object-cover"
           style={{ opacity: videoLoaded ? 1 : 0, transition: "opacity 1s ease" }}
@@ -97,7 +103,7 @@ export function Hero() {
         </h1>
 
         <div className="mt-8 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
-          {/* Left side — designation + buttons below */}
+          {/* Left — designation + buttons */}
           <div className="flex flex-col items-start gap-4">
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -110,47 +116,45 @@ export function Hero() {
               Data Analyst
             </motion.p>
 
-            {/* Buttons row below designation */}
+            {/* Buttons */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.5, duration: 0.8 }}
               className="flex items-center gap-3"
             >
-              {/* Mute / Unmute toggle */}
-              <div className="flex flex-col items-start gap-1">
-                <button
-                  onClick={toggleMute}
-                  className="flex items-center gap-2 rounded-full px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] backdrop-blur-md transition-all"
-                  style={{
-                    color: muted ? "var(--neon)" : "var(--background)",
-                    background: muted ? "rgba(0,0,0,0.4)" : "var(--neon)",
-                    border: "1px solid var(--neon)",
-                  }}
-                >
-                  {muted ? (
-                    <>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                        <line x1="23" y1="9" x2="17" y2="15" />
-                        <line x1="17" y1="9" x2="23" y2="15" />
-                      </svg>
-                      Unmute
-                    </>
-                  ) : (
-                    <>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                      </svg>
-                      Mute
-                    </>
-                  )}
-                </button>
-              </div>
+              {/* Mute / Unmute */}
+              <button
+                onClick={toggleMute}
+                className="flex items-center gap-2 rounded-full px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] backdrop-blur-md transition-all"
+                style={{
+                  color: muted ? "var(--neon)" : "var(--background)",
+                  background: muted ? "rgba(0,0,0,0.4)" : "var(--neon)",
+                  border: "1px solid var(--neon)",
+                }}
+              >
+                {muted ? (
+                  <>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                      <line x1="23" y1="9" x2="17" y2="15" />
+                      <line x1="17" y1="9" x2="23" y2="15" />
+                    </svg>
+                    Unmute
+                  </>
+                ) : (
+                  <>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                    </svg>
+                    Mute
+                  </>
+                )}
+              </button>
 
-              {/* Play Again — only shows after video ends */}
+              {/* Play Again — only after video ends */}
               {ended && (
                 <motion.button
                   initial={{ opacity: 0, x: -10 }}
@@ -158,7 +162,6 @@ export function Hero() {
                   transition={{ duration: 0.4, ease: EASE }}
                   onClick={playAgain}
                   className="flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-foreground backdrop-blur-md transition-all hover:border-[var(--neon)] hover:bg-[var(--neon)] hover:text-background"
-                  style={{}}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="1 4 1 10 7 10" />
@@ -170,7 +173,7 @@ export function Hero() {
             </motion.div>
           </div>
 
-          {/* Right side — scroll to explore */}
+          {/* Right — scroll indicator */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
