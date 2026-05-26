@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const word = {
@@ -13,24 +13,12 @@ const word = {
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [muted, setMuted] = useState(true);
   const [videoLoaded, setVideoLoaded] = useState(false);
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], [0, 220]);
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-
-  // Keep video in sync with mute state
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = muted;
-    }
-  }, [muted]);
-
-  const toggleMute = () => {
-    setMuted((prev) => !prev);
-  };
 
   return (
     <section
@@ -54,8 +42,6 @@ export function Hero() {
         <div className="absolute inset-0 bg-background/60" />
         {/* Subtle noise / grid on top */}
         <div className="absolute inset-0 grid-bg opacity-30" />
-        {/* Neon glow at top */}
-        <div className="absolute inset-0" style={{ background: "var(--grad-glow)" }} />
       </div>
 
       {/* ── Top meta ── */}
@@ -75,32 +61,6 @@ export function Hero() {
       >
         Based in India / Available worldwide
       </motion.div>
-
-      {/* ── Audio toggle ── */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1.5, duration: 0.6, ease: EASE }}
-        onClick={toggleMute}
-        aria-label={muted ? "Unmute video" : "Mute video"}
-        className="absolute bottom-6 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-colors hover:border-[var(--neon)] hover:bg-black/60 md:bottom-8 md:right-12"
-      >
-        {muted ? (
-          /* Muted icon */
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-            <line x1="23" y1="9" x2="17" y2="15" />
-            <line x1="17" y1="9" x2="23" y2="15" />
-          </svg>
-        ) : (
-          /* Unmuted / sound waves icon */
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--neon)]">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-          </svg>
-        )}
-      </motion.button>
 
       {/* ── Main hero content ── */}
       <motion.div style={{ y, scale, opacity }} className="relative z-10 mx-auto w-full max-w-[1600px] px-6 md:px-12">
