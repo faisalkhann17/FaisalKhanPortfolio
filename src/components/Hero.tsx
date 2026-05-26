@@ -22,13 +22,28 @@ export function Hero({ ready }: { ready: boolean }) {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
-  // When loader finishes, wait 1s then play
+  // Start playing as soon as the loader finishes — no extra delay
   useEffect(() => {
     if (!ready) return;
-    const timer = setTimeout(() => {
-      videoRef.current?.play().catch(() => {});
-    }, 1000);
-    return () => clearTimeout(timer);
+    const video = videoRef.current;
+    if (!video) return;
+
+    const attempt = () => {
+      video.play().catch(() => {
+        // Retry once after a short pause (some browsers need a tick)
+        setTimeout(() => video.play().catch(() => {}), 200);
+      });
+    };
+
+    // If video is already buffered enough, play immediately
+    if (video.readyState >= 3) {
+      attempt();
+    } else {
+      // Otherwise wait for it to be ready, then play
+      video.addEventListener("canplay", attempt, { once: true });
+    }
+
+    return () => video.removeEventListener("canplay", attempt);
   }, [ready]);
 
   const toggleMute = () => {
