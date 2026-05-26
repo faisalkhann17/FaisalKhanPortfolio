@@ -38,7 +38,7 @@ function Index() {
       {ready && <SmoothScroll />}
       <Cursor />
       <Nav />
-      <Hero />
+      <Hero ready={ready} />
       <Marquee />
       <About />
       <Skills />
