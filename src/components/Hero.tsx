@@ -44,7 +44,6 @@ export function Hero() {
           ref={videoRef}
           src="https://res.cloudinary.com/dxboyqwda/video/upload/v1779825370/mp__appemv.mp4"
           autoPlay
-          loop
           muted
           playsInline
           onCanPlay={() => setVideoLoaded(true)}
